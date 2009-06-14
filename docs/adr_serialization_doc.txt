@@ -1,0 +1,58 @@
+Serialization is similar to ASN.1 and the DBUS method signature system
+(and an old format I worked with years ago).
+
+Objects have variable length headers that give the type and
+possibly the length:
+
+Constants:
+0 : null
+T : boolean true
+F : boolean false
+
+Non-numeric types:
+_ : null terminated UTF-8 string.  The reason for this character "_"
+    is because using any letter will make the string harder to read
+    when looking at the byte stream as ASCII text by a human, and
+    "_" seemed the least intrusive.
+
+Integral Typecodes (uses network endianism):
+b : signed byte
+B : unsigned byte
+s : signed short
+S : unsigned short
+i : signed int
+I : unsigned int
+l : signed long
+L : unsigned long
+
+non-integral numbers
+f : float (32 bit)
+
+numeric arrays:
+a : array.  Immediately following the 'a' character there is
+    an integral type with represents the count of the objects
+    in the array.  Followed by the typecode for the objects
+    in the array, followed by the serialized objects without
+    their typecode prefix.
+
+delimited structures:
+(,) : list of objects: ex: (bbbb) a list of 4 bytes.
+{,} : mapping of objects: ex: {_i_i_i} a map of three key-value pairs.
+      must enclose an even number of objects.
+
+Exceptions:
+X..x : a mapping like structure delimited with x,
+       which may have the following keys
+    code -> int
+    message -> string
+    stacktrace -> string
+    
+    
+Examples (using \n to represent the byte with value n, and \xN as hex)
+
+sHello World\x0   is "Hello World"
+y\xEF is 128
+aY\x02i\0\0\0\128\0\0\0\55  is int[] { 128, 55 }
+(y\x11(b\x0b\x01))  is list(17, list(false, true) )
+
+
